@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: chatai_user
+      POSTGRES_PASSWORD: chatai_password
+      POSTGRES_DB: chatai_db
+    ports:
+      - "5435:5432"
+    volumes:
+    - postgres_data:/var/lib/postgresql/data
+    - ./chatai-fastapi/postgresql.conf:/etc/postgresql/postgresql.conf
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+
+  frontend:
+    build:
+      context: ./chatai-frontend
+      dockerfile: Dockerfile
+    env_file:
+      - ./chatai-frontend/.env
+    ports:
+      - "3000:3000"
+    # volumes:
+    #   - ./chatai-frontend:/app
+    depends_on:
+      - backend
+
+
+  backend:
+    build:
+      context: ./chatai-fastapi
+      dockerfile: Dockerfile
+    env_file:
+      - ./chatai-fastapi/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./chatai-fastapi:/app
+    depends_on:
+      - db
+
+
+volumes:
+  postgres_data:
